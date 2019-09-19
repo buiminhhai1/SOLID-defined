@@ -132,3 +132,173 @@ Nguyên lý ày cunxg được áp dụng chặc chẽ khi viết các thư vi�
 trong một chương trình, các object của class con có thể thay thế class cha mà không làm thay đổi tính đúng đắn của chuong trình.
 
 ### Giải thích 
+
+
+## 3. Liskov Substituation Principle 
+Nội dung nguyên lý: 
+```python
+  Trong một chương trình, các object của class con có thể thay thế class cha mà không làm thay đổi tính đúng đắn của chương trình.
+```
+
+Giải thích nguyên lý: 
+Xin cảnh báo trước một chút nguyên lý này hơi trừu tượng và khó hiểu (các bác developer nước ngoài cũng tranh cãi khá nhiều về nó), do đó mình sẽ cố gắn giải thích một cách đơn giản nhất có thể. Nếu đọc lần đầu không hiểu, các bạn cố gắn đọc kỹ lại vài lânf. 
+
+Để giữ tính đúng đắn của chương trình, class con phải thay thế được class cha. Nói dễ hiểu là: ngày xửa ngày xưa, hẳn bạn nào cũng có một máy chơi game "Xếp hình" thầnh thánh. 
+
+Ví dụ minh họa.
+ví dụ thường gặp về việc vi phạm LSP: 
+
+### Ví dụ thứ nhất, class con quăng exception khi gọi hàm.
+Giả sử, ta muốn viết một chương trình để mô tả các loài chim bay. Đại bàng chim sẻ, vịt bay được, nhưng chim cánh cụt không bay được. Do chim cánh cụt là chim, ta cho nó kế thừa từ lớp Bird. Tuy nhiên, vì cánh cụt nên không biết bay, khi gọi hàm bay của chim cánh cụt, ta quăng NoFlyException.
+
+```python
+public class Bird {
+  public virtual void Fly() { Console.Write("Fly"); }
+}  
+
+public class Eagle : Bird {
+  public override void Fly() { Console.Write("Eagle Fly"); }
+}
+
+public class Duck : Bird {
+  public override void Fly() { Console.Write("Duck Fly"); }
+}
+
+public class Penguin : Bird {
+  public override void Fly() { throw new NoFlyException(); }
+}
+
+var birds = new List { new Bird(), new Eagle(), new Duck(), new Penguin() };
+foeach(var bird in birds) bird.Fly();
+// Tới pengiun thì lỗi vì cánh cụt quăng Exception
+```
+
+Ta tạo 1 mảng chứa các loài chim rồi duyệt các phần tử. Khi gọi hàm Fly của class Penguin, hàm này sẽ quăng lỗi. Class Penguin gây lỗi khi chạy, không thay thế được class cha của nó là Bird, do đó nó đã vi phạm LSP.
+
+### Ví dụ thứ 2, class con thay đổi hành vi class châ. 
+Đây là ví dụ kinh điển về hình vuông và hình chữ nhật mà mọi người thường dung để giải thích LSP, mình chỉ viết và giải thích lại đôi chút. 
+
+Đầu tiên, hãy cùng đọc đoạn code dưới đây. Ta có 2 class cho hình vuông và hình chữ nhật. Ai cũng biết hình vuông là hình chữ nhật có 2 cạnh bằng nhau, do đó ta có thể cho class Square kế thừa class Rectangle để tái sử dụng code.
+
+```python
+public class Rectangle{
+  public int Height {get; set;}
+  public int Width {get; set;}
+  
+  public virtual void SetHeight(int height){
+    this.Height = height;
+  }
+  
+  public virtual void SetWidth(int width){
+    this.Width = width;
+  }
+  
+  public virtual int CalculateArea(){
+    return this.Height * this.Width;
+  }
+}
+
+public class Square : Rectangle {
+  public override void SetHeight(int height){
+    this.Height = height;
+    this.Width = height;
+  }
+  public override void SetWidth(int width){
+    this.Width = width;
+    this.Height = width;
+  }
+}
+
+Rectangle rect = new Rectangle();
+rect.SetHeight(5);
+rect.SetWidth(15);
+Console.WriteLine(rect.CalculateArea()); // Ket qua la 5 * 15
+
+Rectangle rect1 = new Square();
+rect1.SetHeight(15);
+rect2.SetWidth(5);
+Console.WriteLine(rect1.CalculateArea()); // Ket qua la 5 * 5
+```
+
+Do hình vuông có 2 cạnh bằng nhau, mỗi khi set độ dài 1 cạnh thì ta set luôn độ dài cạnh còn lại. Tuy nhiên, khi chạy thử, hành động này đã thay đổi hành vi của class Rectangle, dẫn đến LSP.
+
+Trong trường hợp này, để code không vi phạm LSP, ta phải tạo 1 class cha là class Shape, sau đó cho Square và Rectangle kế thừa class Shape này.
+
+### Lưu ý và kết luận: 
+Đây là nguyên lý dễ bị vi phạm nhất, nguyên nhân chủ yếu là do sự thiếu kinh nghiệm khi thiết kế class. Thông thường, design các class dựa theo đời thật: hình vuông là hình chữ nhật, chim là chim cánh cụt. Tuy nhiên, không thể bê nguyên văn mối quan hệ này vào code.
+
+## 4. Dependency Inversion Principle
+Nội dung nguyên lý:
+```python
+1.  Các module cấp cao không nên phụ thuộc vào các module cấp thấp. Cả 2 nên phụ thuộc và abstraction.
+2. Interface (abstraction) không nên phụ thuộc vào chi tiết, mà người lại. (Các class giao tiếp thông qua interface, không phải thông qua implementation)
+```
+### Giải thích nguyên lý: 
+Trong bài, mình hay dùng từ module. Trong thực tế, module này có thể là 1 project, 1 file dll, hoặc một server. Để dễ hiểu, chỉ trong bài này bạn xem 1 module là 1 class. 
+
+Vói cách node thông thường, các module cấp cao sẽ gọi các module cấp thấp. Module cấp cao sẽ phụ thuộc và module cấp thấp, điều đó ta ra các dependency. Khi module cấp thấp thay đổi, module cấp cao phải thay đổi theo. Một thay đổi sẽ kéo theo hàng loạt thay đổi, giảm năng bảo trì code.
+
+Nếu tuân theo DIP, các module cấp thấp lẫn cấp cao đều phụ thuộc vào một interface không đổi. Ta có thể dễ dàng thay thế, sửa đổi module cấp thấp mà không ảnh hưởng gì tới module cấp cao.
+
+Để dễ hiểu, bạn hãy nhìn vào cái mấy cái đền trong nhà mình. Ở đây, module cấp cao chính là ổ điện, interface chính là đuôi đèn tròn, 2 module cấp thấp là bóng đèn tròn và bóng đèn huỳnh quang.
+Hai module này đều kế thừa interface đuôi tròn, ta có thể dễ dàng thay đổi 2 loại bóng vì module cấp cao (ổ điện) chỉ quan tâm tói interface (đuôi tròn), không quan tâm tới implementation.
+
+### Ví dụ minh họa: 
+Code khi chưa áp dụng DIP: 
+```python
+public class Cart 
+{
+  public void Checkout(int orderId, int userId){
+    // Database, Logger, EmailSender la module cap thap
+    Database db = new Database();
+    db.Save(orderId);
+    
+    Logger log = new Logger();
+    log.LogInfo("order has been checkout");
+    
+    EmailSender es = new EmailSender();
+    es.SendEmail(userId);
+  }
+}
+
+```
+
+Code sau khi da thiet ke lai, Ap dung DIP 
+```python
+// Interface 
+public interface IDatabase {
+  void Save(int orderId);
+}
+public interface ILogger {
+  void LogInfo(string info);
+}
+
+public interface IEmailSender{
+  void SendEmail(int userId);
+}
+
+// Cac module implement cac interface 
+public class Logger : ILogger {
+  public void LogInfo(string info){}
+}
+
+public Database : IDatabase {
+  public void Save(int orderId){}
+}
+
+public EmailSender : IEmailSender {
+  public void SendEmail(int userId){}
+}
+
+// Ham checkout moi se nhu sau
+public void Checkout(int orderId, int userId){
+  IDatabase db = new Database();
+  db.Save(orderId);
+  
+  ILogger log = new Logger();
+  log.LogInfo(Order has been checkout!");
+  
+  IEmailSender es = new EmailSender();
+  es.SendEmail(userId);
+}
+```
